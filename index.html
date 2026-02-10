@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What is an LLM Control Plane? — The Governance Layer for AI Tool Calls</title>
+  <meta name="description" content="An LLM control plane governs what happens when language models call your backend — identity, authorization, rate limits, and audit for AI tool calls.">
+  <link rel="canonical" href="https://llmcontrolplane.com/">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="What is an LLM Control Plane? — The Governance Layer for AI Tool Calls">
+  <meta property="og:description" content="An LLM control plane governs what happens when language models call your backend — identity, authorization, rate limits, and audit for AI tool calls.">
+  <meta property="og:url" content="https://llmcontrolplane.com/">
+  <meta property="og:image" content="https://llmcontrolplane.com/og-image.png">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="LLM Control Plane">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://llmcontrolplane.com/og-image.png">
+  <meta name="twitter:title" content="What is an LLM Control Plane? — The Governance Layer for AI Tool Calls">
+  <meta name="twitter:description" content="An LLM control plane governs what happens when language models call your backend — identity, authorization, rate limits, and audit for AI tool calls.">
+
+  <style>
+    /* ---------- Design tokens (matched to agenticcontrolplane.com) ---------- */
+    :root {
+      --bg: #0a0f1e;
+      --bg-elev: rgba(255, 255, 255, 0.06);
+      --text: rgba(255, 255, 255, 0.92);
+      --text-dim: rgba(255, 255, 255, 0.72);
+      --text-faint: rgba(255, 255, 255, 0.58);
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #818cf8;
+      --accent-deep: #4f46e5;
+      --cyan: #06b6d4;
+      --danger: #ff4d6d;
+      --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    /* ---------- Reset ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { height: 100%; overflow-x: hidden; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--text);
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 120% 80% at 20% 0%, rgba(79,70,229,0.18), rgba(79,70,229,0) 70%),
+        radial-gradient(ellipse 100% 70% at 80% 0%, rgba(34,197,94,0.08), rgba(34,197,94,0) 65%);
+      background-attachment: fixed;
+      font-size: 18px;
+      line-height: 1.7;
+      letter-spacing: -0.01em;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    :focus-visible { outline: 3px solid rgba(79,70,229,0.55); outline-offset: 2px; }
+
+    /* ---------- Layout ---------- */
+    .content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px 80px;
+    }
+
+    /* ---------- Typography ---------- */
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      line-height: 1.2;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin: 0 0 32px;
+      color: var(--text);
+    }
+    h2 {
+      font-size: clamp(1.15rem, 2.5vw, 1.35rem);
+      line-height: 1.3;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 48px 0 16px;
+      color: var(--text);
+    }
+    p { margin: 0 0 18px; color: var(--text-dim); }
+    strong { color: var(--text); font-weight: 600; }
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 40px 0;
+    }
+
+    /* ---------- Diagram ---------- */
+    .diagram-wrap {
+      margin: 32px 0 24px;
+      overflow-x: auto;
+    }
+
+    /* ---------- Differentiators list ---------- */
+    .diff-list { margin: 20px 0 24px; padding: 0; list-style: none; }
+    .diff-list li {
+      padding: 0 0 14px;
+      margin: 0;
+      color: var(--text-dim);
+    }
+    .diff-list li strong { color: var(--text); }
+
+    /* ---------- When-list ---------- */
+    .when-item { margin-bottom: 14px; }
+    .when-item strong { color: var(--text); }
+
+    /* ---------- CTA link ---------- */
+    .cta-link {
+      display: inline-block;
+      margin-top: 8px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+      color: var(--text-faint);
+      line-height: 1.6;
+    }
+    .footer a { color: var(--text-faint); }
+    .footer a:hover { color: var(--accent); }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 640px) {
+      .content { padding: 40px 18px 60px; }
+      body { font-size: 17px; }
+    }
+  </style>
+
+  <!-- Privacy-friendly analytics by Plausible -->
+  <script async src="https://analytics.reducibl.com/js/pa-wsm6hw7LvYceJOPDjWp9Z.js"></script>
+  <script>
+    window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+    plausible.init()
+  </script>
+</head>
+<body>
+  <main class="content">
+
+    <h1>what is an llm control plane?</h1>
+
+    <p>when a large language model calls your backend — through MCP, the openai apps sdk, or any tool-calling protocol — your backend receives a request. but it doesn't receive the <em>user's</em> identity. the LLM forwarded the call with a shared API key. your backend processes it with no knowledge of who triggered it, what they're allowed to do, or whether the request contains sensitive data.</p>
+
+    <p>this is the fundamental problem an LLM control plane solves. it's the governance layer that intercepts every LLM-initiated tool call and ensures it's identified, authorized, safe, and auditable — before it reaches your services.</p>
+
+    <p>if you've built an MCP server and realized your backend can't tell which user the LLM is acting for, you've already discovered why you need an MCP control plane.</p>
+
+    <hr>
+
+    <h2>what it does</h2>
+
+    <p>an LLM control plane sits between LLM runtimes — chatgpt, claude, cursor, custom agents — and your backend services. every request passes through a governance pipeline that handles six concerns:</p>
+
+    <ul class="diff-list">
+      <li><strong>identity verification</strong> — validate the user's OAuth token (RS256 JWT) and bind the request to a real person, not a shared key. this is the foundation — without it, nothing else works.</li>
+      <li><strong>content safety</strong> — detect PII (social security numbers, credit cards, medical records) in tool call parameters before they reach the model or your backend.</li>
+      <li><strong>policy enforcement</strong> — deny-by-default authorization. check whether this user has permission to invoke this specific tool, based on their roles and scopes.</li>
+      <li><strong>rate limits and budget controls</strong> — per-user spend caps and request limits. pre-flight checks that reject calls before the expensive operation happens. agent loop detection.</li>
+      <li><strong>secure routing</strong> — forward the request to the right backend with the user's verified identity injected. SSRF protection so agents can't be tricked into calling internal services.</li>
+      <li><strong>audit logging</strong> — structured, immutable records of every tool call: who, what, which policy, what cost, approved or denied.</li>
+    </ul>
+
+    <p>this is not about routing prompts to different models — that's an LLM gateway (portkey, litellm, openrouter). the control plane governs what happens <em>after</em> the model decides to call a tool. different layer, different problem.</p>
+
+    <hr>
+
+    <h2>"llm control plane" vs "agentic control plane"</h2>
+
+    <p>these terms describe the same architectural pattern from different angles.</p>
+
+    <p><strong>"LLM control plane"</strong> emphasizes the runtime. it governs LLM-initiated actions specifically — tool calls that originate from a language model acting on behalf of a user. if you're building MCP servers or openai integrations and need identity, policy, and audit on every tool call, this is the problem you're solving.</p>
+
+    <p><strong>"<a href="https://agenticcontrolplane.com/what-is-an-agentic-control-plane">agentic control plane</a>"</strong> is the broader category term. it encompasses multi-agent systems, autonomous workflows, and any AI system that takes actions on behalf of users — including but not limited to LLM tool calls. the governance pipeline is the same: identity, authorization, content safety, rate limits, routing, audit. the scope is wider.</p>
+
+    <p>in practice, most teams start here — "my MCP server needs to know who the user is" — and discover they're building an <a href="https://agenticcontrolplane.com/what-is-an-agentic-control-plane">agentic control plane</a>. same infrastructure, same pattern. the label depends on your entry point.</p>
+
+    <hr>
+
+    <h2>where it sits in the stack</h2>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 760 140" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram showing the LLM control plane position: user to LLM runtime to LLM control plane to your backend" style="width:100%;max-width:760px;display:block;margin:0 auto;">
+        <!-- user -->
+        <rect x="10" y="20" width="150" height="100" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <text x="85" y="58" text-anchor="middle" fill="rgba(255,255,255,0.92)" font-family="system-ui,sans-serif" font-size="14" font-weight="600">user</text>
+        <text x="85" y="78" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">authenticates via SSO</text>
+        <text x="85" y="94" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">identity, roles, scopes</text>
+        <!-- arrow 1 -->
+        <line x1="160" y1="70" x2="195" y2="70" stroke="rgba(129,140,248,0.6)" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="195,66 203,70 195,74" fill="rgba(129,140,248,0.6)"/>
+        <!-- llm -->
+        <rect x="205" y="20" width="150" height="100" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <text x="280" y="58" text-anchor="middle" fill="rgba(255,255,255,0.92)" font-family="system-ui,sans-serif" font-size="14" font-weight="600">LLM runtime</text>
+        <text x="280" y="78" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">ChatGPT, Claude, Cursor</text>
+        <text x="280" y="94" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">MCP / Apps SDK</text>
+        <!-- arrow 2 -->
+        <line x1="355" y1="70" x2="390" y2="70" stroke="rgba(129,140,248,0.6)" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="390,66 398,70 390,74" fill="rgba(129,140,248,0.6)"/>
+        <!-- control plane (highlighted) -->
+        <rect x="400" y="20" width="160" height="100" rx="12" fill="rgba(79,70,229,0.12)" stroke="rgba(129,140,248,0.4)" stroke-width="1.5"/>
+        <text x="480" y="50" text-anchor="middle" fill="rgba(129,140,248,1)" font-family="system-ui,sans-serif" font-size="14" font-weight="700">LLM control plane</text>
+        <text x="480" y="70" text-anchor="middle" fill="rgba(255,255,255,0.58)" font-family="system-ui,sans-serif" font-size="10">identity · policy · safety</text>
+        <text x="480" y="84" text-anchor="middle" fill="rgba(255,255,255,0.58)" font-family="system-ui,sans-serif" font-size="10">limits · routing · audit</text>
+        <text x="480" y="106" text-anchor="middle" fill="rgba(129,140,248,0.7)" font-family="system-ui,sans-serif" font-size="10">the trust layer</text>
+        <!-- arrow 3 -->
+        <line x1="560" y1="70" x2="595" y2="70" stroke="rgba(6,182,212,0.6)" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <polygon points="595,66 603,70 595,74" fill="rgba(6,182,212,0.6)"/>
+        <!-- backend -->
+        <rect x="605" y="20" width="145" height="100" rx="12" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+        <text x="677" y="58" text-anchor="middle" fill="rgba(255,255,255,0.92)" font-family="system-ui,sans-serif" font-size="14" font-weight="600">your backend</text>
+        <text x="677" y="78" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">APIs, databases, tools</text>
+        <text x="677" y="94" text-anchor="middle" fill="rgba(255,255,255,0.52)" font-family="system-ui,sans-serif" font-size="11">receives verified identity</text>
+      </svg>
+    </div>
+
+    <p>the LLM control plane occupies a distinct layer. it's not the model layer and not the API layer. it's the trust boundary in between. here's how it differs from things it's commonly confused with:</p>
+
+    <p><strong>not an LLM gateway.</strong> tools like portkey, litellm, and openrouter route prompts to the cheapest or fastest model provider. they sit between your app and the LLM. the control plane sits on the other side — between the LLM and your backend. different problem.</p>
+
+    <p><strong>not an API gateway.</strong> kong, apigee, and aws api gateway handle HTTP traffic management — routing, TLS, rate limiting by API key. they don't understand the three-party identity problem where the caller (the LLM) and the user (the person) are different entities. the control plane solves that.</p>
+
+    <p><strong>not an agent framework.</strong> langchain, crewai, and autogen help you <em>build</em> agents. the control plane <em>governs</em> them. the framework decides what to do. the control plane decides whether it's allowed.</p>
+
+    <hr>
+
+    <h2>when you need one</h2>
+
+    <p class="when-item"><strong>you're moving an AI pilot to production.</strong> the pilot worked with a shared API key and a single test user. production needs per-user identity, access controls, and audit trails. this is where every team discovers the governance gap.</p>
+
+    <p class="when-item"><strong>you're in a regulated industry.</strong> HIPAA, SOC 2, GDPR, PCI DSS — all require identity-attributed access controls and audit trails for systems that process protected data. AI-mediated access is no exception.</p>
+
+    <p class="when-item"><strong>your agents take real actions.</strong> not chatbots that answer questions — agents that create tickets, modify records, query patient data, process transactions. real actions need real governance.</p>
+
+    <p class="when-item"><strong>you use multiple AI models.</strong> chatgpt for one workflow, claude for another, cursor for development. governance that only covers one provider leaves the rest unmonitored. the control plane needs to be model-agnostic.</p>
+
+    <p class="when-item"><strong>your compliance team is asking questions.</strong> "who accessed patient data through the AI last month?" "can you prove PII isn't being sent to third-party models?" "where's the audit trail?" an MCP control plane gives you answers.</p>
+
+    <hr>
+
+    <h2>implementation</h2>
+
+    <p>the AI control plane pattern can be implemented in any language or framework. the architecture is what matters: six layers (identity, content safety, policy, limits, routing, audit), executed in order, deny-by-default, with verified identity flowing through the entire pipeline.</p>
+
+    <p><a href="https://github.com/davidcrowe/gatewaystack">GatewayStack</a> is one open-source (MIT) implementation — six composable npm modules, one per governance layer. start with identity verification and add layers as your requirements grow. <a href="https://connect.gatewaystack.com/login">GatewayStack Connect</a> provides the same pipeline as a managed service with a dashboard.</p>
+
+    <p>for the definitive deep dive — including the three-party problem, architecture diagrams, identity flows, JWT walkthroughs, and code examples — read <a href="https://agenticcontrolplane.com/what-is-an-agentic-control-plane">what is an agentic control plane?</a></p>
+
+    <div class="footer">
+      <p>written by <a href="https://reducibl.com">david crowe</a> · <a href="https://www.linkedin.com/in/mrdavidcrowe/">linkedin</a></p>
+    </div>
+
+  </main>
+
+  <!-- Structured data: TechArticle -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "What is an LLM Control Plane? — The Governance Layer for AI Tool Calls",
+    "description": "An LLM control plane governs what happens when language models call your backend — identity, authorization, rate limits, and audit for AI tool calls.",
+    "author": {
+      "@type": "Person",
+      "name": "David Crowe",
+      "url": "https://reducibl.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "LLM Control Plane",
+      "url": "https://llmcontrolplane.com"
+    },
+    "datePublished": "2026-02-10",
+    "dateModified": "2026-02-10",
+    "mainEntityOfPage": "https://llmcontrolplane.com/",
+    "keywords": "LLM control plane, MCP control plane, AI control plane, LLM governance, AI identity, MCP security",
+    "proficiencyLevel": "Beginner"
+  }
+  </script>
+
+  <!-- Structured data: FAQPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What is an LLM control plane?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "An LLM control plane is the governance middleware between language model runtimes and backend services. When an LLM calls a tool or API on behalf of a user, the control plane intercepts the request to verify the user's identity via OAuth/JWT, enforce role-based access policies, scan for sensitive data, apply per-user rate limits and budget caps, route the request securely, and write an immutable audit record. It solves the three-party identity problem where the LLM sits between the user and the backend, breaking traditional authentication models."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between an LLM control plane and an LLM gateway?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "An LLM gateway (such as Portkey, LiteLLM, or OpenRouter) sits between your application and model providers, handling model selection, cost optimization, and failover for prompts. An LLM control plane sits on the opposite side of the model — between the LLM and your backend services. It governs what happens when the model calls your tools and APIs, enforcing identity, authorization, and audit. They operate at different points in the request flow and solve different problems. Most production deployments use both."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is the difference between an LLM control plane and an agentic control plane?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "They describe the same governance pattern from different perspectives. 'LLM control plane' emphasizes the runtime — it governs tool calls originating from language models specifically. 'Agentic control plane' is the broader category that also encompasses multi-agent systems, autonomous workflows, and any AI system acting on behalf of users. The underlying architecture is identical: identity verification, policy enforcement, content safety, rate limiting, secure routing, and audit logging. The label depends on whether you're focused on LLM integrations or broader agent governance."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I implement an LLM control plane?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Start with identity — add JWT verification to intercept every LLM-initiated request and bind it to a verified user. Then layer on policy enforcement (deny-by-default authorization), content safety (PII detection), rate limiting (per-user budget caps), secure routing, and audit logging. GatewayStack is an open-source implementation providing six composable npm modules, one per governance layer. GatewayStack Connect offers the same pipeline as a managed service. The key architectural principle: identity must come first, because every other governance layer depends on knowing who the user is."
+        }
+      }
+    ]
+  }
+  </script>
+
+</body>
+</html>
