@@ -1,0 +1,81 @@
+# What is an LLM Control Plane? — The Governance Layer for AI Tool Calls
+
+When a large language model calls your backend — through MCP, the OpenAI Apps SDK, or any tool-calling protocol — your backend receives a request. But it doesn't receive the user's identity. The LLM forwarded the call with a shared API key. Your backend processes it with no knowledge of who triggered it, what they're allowed to do, or whether the request contains sensitive data.
+
+This is the fundamental problem an LLM control plane solves. It's the governance layer that intercepts every LLM-initiated tool call and ensures it's identified, authorized, safe, and auditable — before it reaches your services.
+
+If you've built an MCP server and realized your backend can't tell which user the LLM is acting for, you've already discovered why you need an MCP control plane.
+
+## What it does
+
+An LLM control plane sits between LLM runtimes — ChatGPT, Claude, Cursor, custom agents — and your backend services. Every request passes through a governance pipeline that handles six concerns:
+
+- **Identity verification** — Validate the user's OAuth token (RS256 JWT) and bind the request to a real person, not a shared key. This is the foundation — without it, nothing else works.
+- **Content safety** — Detect PII (social security numbers, credit cards, medical records) in tool call parameters before they reach the model or your backend.
+- **Policy enforcement** — Deny-by-default authorization. Check whether this user has permission to invoke this specific tool, based on their roles and scopes.
+- **Rate limits and budget controls** — Per-user spend caps and request limits. Pre-flight checks that reject calls before the expensive operation happens. Agent loop detection.
+- **Secure routing** — Forward the request to the right backend with the user's verified identity injected. SSRF protection so agents can't be tricked into calling internal services.
+- **Audit logging** — Structured, immutable records of every tool call: who, what, which policy, what cost, approved or denied.
+
+This is not about routing prompts to different models — that's an LLM gateway (Portkey, LiteLLM, OpenRouter). The control plane governs what happens after the model decides to call a tool. Different layer, different problem.
+
+## "LLM control plane" vs "agentic control plane"
+
+These terms describe the same architectural pattern from different angles.
+
+"LLM control plane" emphasizes the runtime. It governs LLM-initiated actions specifically — tool calls that originate from a language model acting on behalf of a user. If you're building MCP servers or OpenAI integrations and need identity, policy, and audit on every tool call, this is the problem you're solving.
+
+"Agentic control plane" is the broader category term. It encompasses multi-agent systems, autonomous workflows, and any AI system that takes actions on behalf of users — including but not limited to LLM tool calls. The governance pipeline is the same: identity, authorization, content safety, rate limits, routing, audit. The scope is wider.
+
+In practice, most teams start here — "my MCP server needs to know who the user is" — and discover they're building an agentic control plane. Same infrastructure, same pattern. The label depends on your entry point.
+
+## Where it sits in the stack
+
+User → LLM Runtime (ChatGPT, Claude, Cursor) → LLM Control Plane → Your Backend
+
+The LLM control plane occupies a distinct layer. It's not the model layer and not the API layer. It's the trust boundary in between. Here's how it differs from things it's commonly confused with:
+
+**Not an LLM gateway.** Tools like Portkey, LiteLLM, and OpenRouter route prompts to the cheapest or fastest model provider. They sit between your app and the LLM. The control plane sits on the other side — between the LLM and your backend. Different problem.
+
+**Not an API gateway.** Kong, Apigee, and AWS API Gateway handle HTTP traffic management — routing, TLS, rate limiting by API key. They don't understand the three-party identity problem where the caller (the LLM) and the user (the person) are different entities. The control plane solves that.
+
+**Not an agent framework.** LangChain, CrewAI, and AutoGen help you build agents. The control plane governs them. The framework decides what to do. The control plane decides whether it's allowed.
+
+## When you need one
+
+**You're moving an AI pilot to production.** The pilot worked with a shared API key and a single test user. Production needs per-user identity, access controls, and audit trails. This is where every team discovers the governance gap.
+
+**You're in a regulated industry.** HIPAA, SOC 2, GDPR, PCI DSS — all require identity-attributed access controls and audit trails for systems that process protected data. AI-mediated access is no exception.
+
+**Your agents take real actions.** Not chatbots that answer questions — agents that create tickets, modify records, query patient data, process transactions. Real actions need real governance.
+
+**You use multiple AI models.** ChatGPT for one workflow, Claude for another, Cursor for development. Governance that only covers one provider leaves the rest unmonitored. The control plane needs to be model-agnostic.
+
+**Your compliance team is asking questions.** "Who accessed patient data through the AI last month?" "Can you prove PII isn't being sent to third-party models?" "Where's the audit trail?" An MCP control plane gives you answers.
+
+## Implementation
+
+The AI control plane pattern can be implemented in any language or framework. The architecture is what matters: six layers (identity, content safety, policy, limits, routing, audit), executed in order, deny-by-default, with verified identity flowing through the entire pipeline.
+
+GatewayStack (https://github.com/davidcrowe/gatewaystack) is one open-source (MIT) implementation — six composable npm modules, one per governance layer. Start with identity verification and add layers as your requirements grow. GatewayStack Connect (https://connect.gatewaystack.com/login) provides the same pipeline as a managed service with a dashboard.
+
+For the definitive deep dive — including the three-party problem, architecture diagrams, identity flows, JWT walkthroughs, and code examples — read "What is an Agentic Control Plane?" at https://agenticcontrolplane.com/what-is-an-agentic-control-plane
+
+## FAQ
+
+**What is an LLM control plane?**
+An LLM control plane is the governance middleware between language model runtimes and backend services. When an LLM calls a tool or API on behalf of a user, the control plane intercepts the request to verify the user's identity via OAuth/JWT, enforce role-based access policies, scan for sensitive data, apply per-user rate limits and budget caps, route the request securely, and write an immutable audit record. It solves the three-party identity problem where the LLM sits between the user and the backend, breaking traditional authentication models.
+
+**What is the difference between an LLM control plane and an LLM gateway?**
+An LLM gateway (such as Portkey, LiteLLM, or OpenRouter) sits between your application and model providers, handling model selection, cost optimization, and failover for prompts. An LLM control plane sits on the opposite side of the model — between the LLM and your backend services. It governs what happens when the model calls your tools and APIs, enforcing identity, authorization, and audit. They operate at different points in the request flow and solve different problems. Most production deployments use both.
+
+**What is the difference between an LLM control plane and an agentic control plane?**
+They describe the same governance pattern from different perspectives. "LLM control plane" emphasizes the runtime — it governs tool calls originating from language models specifically. "Agentic control plane" is the broader category that also encompasses multi-agent systems, autonomous workflows, and any AI system acting on behalf of users. The underlying architecture is identical: identity verification, policy enforcement, content safety, rate limiting, secure routing, and audit logging. The label depends on whether you're focused on LLM integrations or broader agent governance.
+
+**How do I implement an LLM control plane?**
+Start with identity — add JWT verification to intercept every LLM-initiated request and bind it to a verified user. Then layer on policy enforcement (deny-by-default authorization), content safety (PII detection), rate limiting (per-user budget caps), secure routing, and audit logging. GatewayStack is an open-source implementation providing six composable npm modules, one per governance layer. GatewayStack Connect offers the same pipeline as a managed service. The key architectural principle: identity must come first, because every other governance layer depends on knowing who the user is.
+
+---
+
+Author: David Crowe (https://reducibl.com)
+Published: February 2026

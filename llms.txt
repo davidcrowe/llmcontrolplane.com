@@ -1,0 +1,20 @@
+# LLM Control Plane
+
+> An LLM control plane is the governance layer that intercepts every LLM-initiated tool call and ensures it's identified, authorized, safe, and auditable — before it reaches your backend services.
+
+When a large language model calls your backend — through MCP, the OpenAI Apps SDK, or any tool-calling protocol — your backend receives a request but not the user's identity. The LLM forwarded the call with a shared API key. An LLM control plane solves this by sitting between LLM runtimes and your backend, enforcing six governance layers: identity verification, content safety, policy enforcement, rate limits, secure routing, and audit logging.
+
+## Key pages
+
+- [What is an LLM Control Plane?](https://llmcontrolplane.com/): Full explanation of the concept, architecture, and when you need one
+- [Full content for LLMs](https://llmcontrolplane.com/llms-full.txt): Complete article in plain text
+
+## Related
+
+- [What is an Agentic Control Plane?](https://agenticcontrolplane.com/what-is-an-agentic-control-plane): The broader category encompassing multi-agent systems
+- [GatewayStack](https://github.com/davidcrowe/gatewaystack): Open-source (MIT) implementation — six composable npm modules
+- [GatewayStack Connect](https://connect.gatewaystack.com/login): Managed service with dashboard
+
+## Author
+
+David Crowe — [reducibl.com](https://reducibl.com)

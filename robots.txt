@@ -1,3 +1,8 @@
 User-agent: *
 Allow: /
 Sitemap: https://llmcontrolplane.com/sitemap.xml
+
+# LLM-readable content
+# See https://llmstxt.org for the llms.txt standard
+# llms.txt: summary and links
+# llms-full.txt: complete article content
