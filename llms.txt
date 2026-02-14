@@ -13,7 +13,7 @@ When a large language model calls your backend — through MCP, the OpenAI Apps 
 
 - [What is an Agentic Control Plane?](https://agenticcontrolplane.com/what-is-an-agentic-control-plane): The broader category encompassing multi-agent systems
 - [GatewayStack](https://github.com/davidcrowe/gatewaystack): Open-source (MIT) implementation — six composable npm modules
-- [GatewayStack Connect](https://connect.gatewaystack.com/login): Managed service with dashboard
+- [Agentic Control Plane Cloud](https://agenticcontrolplane.com/product): Managed service with dashboard
 
 ## Author
 

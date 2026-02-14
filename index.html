@@ -255,7 +255,7 @@
 
     <p>the AI control plane pattern can be implemented in any language or framework. the architecture is what matters: six layers (identity, content safety, policy, limits, routing, audit), executed in order, deny-by-default, with verified identity flowing through the entire pipeline.</p>
 
-    <p><a href="https://github.com/davidcrowe/gatewaystack">GatewayStack</a> is one open-source (MIT) implementation — six composable npm modules, one per governance layer. start with identity verification and add layers as your requirements grow. <a href="https://connect.gatewaystack.com/login">GatewayStack Connect</a> provides the same pipeline as a managed service with a dashboard.</p>
+    <p><a href="https://github.com/davidcrowe/gatewaystack">GatewayStack</a> is one open-source (MIT) implementation — six composable npm modules, one per governance layer. start with identity verification and add layers as your requirements grow. <a href="https://agenticcontrolplane.com/product">agentic control plane cloud</a> provides the same pipeline as a managed service with a dashboard.</p>
 
     <p>for the definitive deep dive — including the three-party problem, architecture diagrams, identity flows, JWT walkthroughs, and code examples — read <a href="https://agenticcontrolplane.com/what-is-an-agentic-control-plane">what is an agentic control plane?</a></p>
 
@@ -326,7 +326,7 @@
         "name": "How do I implement an LLM control plane?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Start with identity — add JWT verification to intercept every LLM-initiated request and bind it to a verified user. Then layer on policy enforcement (deny-by-default authorization), content safety (PII detection), rate limiting (per-user budget caps), secure routing, and audit logging. GatewayStack is an open-source implementation providing six composable npm modules, one per governance layer. GatewayStack Connect offers the same pipeline as a managed service. The key architectural principle: identity must come first, because every other governance layer depends on knowing who the user is."
+          "text": "Start with identity — add JWT verification to intercept every LLM-initiated request and bind it to a verified user. Then layer on policy enforcement (deny-by-default authorization), content safety (PII detection), rate limiting (per-user budget caps), secure routing, and audit logging. GatewayStack is an open-source implementation providing six composable npm modules, one per governance layer. Agentic Control Plane Cloud offers the same pipeline as a managed service. The key architectural principle: identity must come first, because every other governance layer depends on knowing who the user is."
         }
       }
     ]
