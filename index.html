@@ -16,6 +16,7 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="LLM Control Plane">
   <meta property="article:published_time" content="2026-02-10">
+  <meta property="article:modified_time" content="2026-04-16">
   <meta property="article:author" content="https://reducibl.com">
 
   <!-- Twitter -->
@@ -190,6 +191,24 @@
 
     <hr>
 
+    <h2>the open spec: ADCS</h2>
+
+    <p>one LLM, one backend is the simple case. production is multi-hop: an orchestrator agent delegates to a researcher, which delegates to a tool agent, which calls your MCP server. every hop changes the authority context. every hop needs to narrow scope. the audit log has to survive the chain.</p>
+
+    <p><a href="https://agenticcontrolplane.com/spec/delegation-chain">ADCS — the Agent Delegation Chain Specification</a> is the open spec for that chain. it defines a JSON data structure plus six normative rules: the original human's identity is preserved at every depth; scopes only narrow (never widen); budgets propagate with <code>min()</code> so runaway loops are bounded; an agent can never delegate back into a profile already in the chain; type identity (what agent) is distinct from runtime identity (which invocation) for clean audit correlation; every governed call emits the chain.</p>
+
+    <p>ADCS is CC BY 4.0 (spec) and MIT (schema, conformance test vectors, reference implementation). an LLM control plane that emits ADCS-shaped audit entries produces logs that compose across vendors and answer the question regulators actually ask. <a href="https://github.com/agentic-control-plane/delegation-chain-spec">repo on GitHub</a>.</p>
+
+    <hr>
+
+    <h2>regulatory context: EU AI Act Article 14</h2>
+
+    <p>from <strong>August 2, 2026</strong>, EU AI Act Article 14 requires demonstrable human oversight of high-risk AI systems. a chat-transcript approval flow — where the model asks the human before acting — doesn't qualify. the model cannot be the overseer of itself, and a conversational log is not a queryable audit artifact.</p>
+
+    <p>for any LLM deployment that serves EU users or touches high-risk use cases (employment, credit, critical infrastructure, essential public and private services), this is the nearest-term compliance driver for adopting a control plane. the structured per-call decision log <em>is</em> the Article 14 oversight evidence. <a href="https://agenticcontrolplane.com/blog/eu-ai-act-article-14-ai-agent-delegation-chains">read the mapping of Article 14(4)(a)-(e) to delegation chain artifacts.</a></p>
+
+    <hr>
+
     <h2>where it sits in the stack</h2>
 
     <div class="diagram-wrap">
@@ -259,8 +278,18 @@
 
     <p>for the definitive deep dive — including the three-party problem, architecture diagrams, identity flows, JWT walkthroughs, and code examples — read <a href="https://agenticcontrolplane.com/what-is-an-agentic-control-plane">what is an agentic control plane?</a></p>
 
+    <hr>
+
+    <h2>next steps</h2>
+
+    <p class="when-item"><strong><a href="https://agenticcontrolplane.com/scan">scan your MCP server.</a></strong> free, in-browser. surfaces auth, input validation, rate-limit, and audit gaps. no signup.</p>
+
+    <p class="when-item"><strong><a href="https://agenticcontrolplane.com/spec/delegation-chain">read the ADCS spec.</a></strong> open data shape for multi-hop LLM-to-backend audit. conformance vectors and reference implementation included.</p>
+
+    <p class="when-item"><strong><a href="https://cloud.agenticcontrolplane.com/login">start on ACP Cloud free tier.</a></strong> 5,000 governed tool calls per month, no credit card.</p>
+
     <footer class="footer">
-      <p><time datetime="2026-02-10">february 2026</time> · written by <a href="https://reducibl.com">david crowe</a> · <a href="https://www.linkedin.com/in/mrdavidcrowe/">linkedin</a></p>
+      <p><time datetime="2026-04-16">updated april 2026</time> · written by <a href="https://reducibl.com">david crowe</a> · <a href="https://www.linkedin.com/in/mrdavidcrowe/">linkedin</a></p>
     </footer>
 
   </article>
@@ -284,9 +313,9 @@
       "url": "https://llmcontrolplane.com"
     },
     "datePublished": "2026-02-10",
-    "dateModified": "2026-02-10",
+    "dateModified": "2026-04-16",
     "mainEntityOfPage": "https://llmcontrolplane.com/",
-    "keywords": "LLM control plane, MCP control plane, AI control plane, LLM governance, AI identity, MCP security",
+    "keywords": "LLM control plane, MCP control plane, AI control plane, LLM governance, AI identity, MCP security, agent delegation chain, ADCS, EU AI Act Article 14",
     "proficiencyLevel": "Beginner"
   }
   </script>
@@ -327,6 +356,22 @@
         "acceptedAnswer": {
           "@type": "Answer",
           "text": "Start with identity — add JWT verification to intercept every LLM-initiated request and bind it to a verified user. Then layer on policy enforcement (deny-by-default authorization), content safety (PII detection), rate limiting (per-user budget caps), secure routing, and audit logging. GatewayStack is an open-source implementation providing six composable npm modules, one per governance layer. Agentic Control Plane Cloud offers the same pipeline as a managed service. The key architectural principle: identity must come first, because every other governance layer depends on knowing who the user is."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What is ADCS (the Agent Delegation Chain Specification)?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "ADCS is an open spec (CC BY 4.0 / MIT) that defines the JSON data structure and six normative rules for multi-hop agent delegation: origin invariant (every action traces to one human), scope intersection (permissions only narrow), budget propagation (spend is bounded by min() across hops), cycle prevention (no infinite delegation loops), type vs runtime identity (stable agentProfileId and unique agentRunId), and audit emission (every governed call emits the chain). An LLM control plane that emits ADCS-shaped audit entries produces logs that compose across vendors, survive SIEM ingestion without custom pipelines, and answer the regulatory questions about where authority came from and how it narrowed at each hop. Reference implementation at github.com/agentic-control-plane/delegation-chain-spec."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How does an LLM control plane address EU AI Act Article 14?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "From August 2, 2026, EU AI Act Article 14 requires demonstrable human oversight of high-risk AI systems. Prompt-based approval flows (where the LLM asks a human before acting) do not satisfy the requirement because the model cannot also be the overseer, and conversational transcripts are not queryable audit artifacts. An LLM control plane produces the oversight evidence Article 14(4) demands: structured per-call audit records with verified user identity, deterministic policy decisions with reason codes, version-controlled deny rules on any axis (tool, agent type, user), audit-mode-before-enforce rollout, and one-flag kill-switches. The control plane's decision log is the Article 14 oversight artifact."
         }
       }
     ]

@@ -6,14 +6,21 @@ When a large language model calls your backend — through MCP, the OpenAI Apps 
 
 ## Key pages
 
-- [What is an LLM Control Plane?](https://llmcontrolplane.com/): Full explanation of the concept, architecture, and when you need one
-- [Full content for LLMs](https://llmcontrolplane.com/llms-full.txt): Complete article in plain text
+- [What is an LLM Control Plane?](https://llmcontrolplane.com/): Full explanation of the concept, architecture, and when you need one.
+- [Full content for LLMs](https://llmcontrolplane.com/llms-full.txt): Complete article in plain text.
 
 ## Related
 
-- [What is an Agentic Control Plane?](https://agenticcontrolplane.com/what-is-an-agentic-control-plane): The broader category encompassing multi-agent systems
-- [GatewayStack](https://github.com/davidcrowe/gatewaystack): Open-source (MIT) implementation — six composable npm modules
-- [Agentic Control Plane Cloud](https://agenticcontrolplane.com/product): Managed service with dashboard
+- [What is an Agentic Control Plane?](https://agenticcontrolplane.com/what-is-an-agentic-control-plane): The broader category encompassing multi-agent systems.
+- [ADCS — Agent Delegation Chain Specification](https://agenticcontrolplane.com/spec/delegation-chain): Open spec for multi-hop delegation. JSON data shape plus six normative rules — origin invariant, scope intersection, budget propagation, cycle prevention, type vs runtime identity, audit emission. MIT / CC BY 4.0.
+- [Three-Axis Governance](https://agenticcontrolplane.com/three-axis-governance): Tool / agent / user ABAC model used for every policy decision in the ACP gateway.
+- [EU AI Act Article 14 and AI Agent Delegation Chains](https://agenticcontrolplane.com/blog/eu-ai-act-article-14-ai-agent-delegation-chains): How the structured audit log maps to Article 14(4)(a)-(e) human-oversight requirements effective August 2, 2026.
+
+## Implementation
+
+- [GatewayStack](https://github.com/davidcrowe/gatewaystack): Open-source (MIT) implementation — six composable npm modules.
+- [Agentic Control Plane Cloud](https://agenticcontrolplane.com/product): Managed service with dashboard. Free tier: 5,000 governed tool calls/month.
+- [MCP Security Scanner](https://agenticcontrolplane.com/scan): Free in-browser scanner for MCP servers. No signup.
 
 ## Author
 

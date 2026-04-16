@@ -29,6 +29,37 @@ These terms describe the same architectural pattern from different angles.
 
 In practice, most teams start here — "my MCP server needs to know who the user is" — and discover they're building an agentic control plane. Same infrastructure, same pattern. The label depends on your entry point.
 
+## The open spec: ADCS
+
+One LLM, one backend is the simple case. Production is multi-hop: an orchestrator agent delegates to a researcher, which delegates to a tool agent, which calls your backend. Every hop changes the authority context. Every hop needs to narrow scope. The audit log has to survive the chain.
+
+ADCS — the Agent Delegation Chain Specification — is the open spec for that chain. It defines a JSON data structure plus six normative rules:
+
+1. Origin invariant — the original human's identity is preserved at every depth.
+2. Scope intersection — effective_child = intersect(effective_parent, profile_child). Permissions only narrow.
+3. Budget propagation — budget_child = min(remaining_parent, max_child). Runaway loops are mathematically bounded.
+4. Cycle prevention — an agent cannot delegate back into a profile already in the chain.
+5. Type vs runtime identity — stable agentProfileId distinct from per-execution agentRunId, so audit queries correlate runs under parallel concurrency.
+6. Audit emission — every governed tool call emits an audit entry containing the full chain.
+
+ADCS is CC BY 4.0 (spec text) and MIT (schema, conformance test vectors, reference implementation). Repo: https://github.com/agentic-control-plane/delegation-chain-spec. Hub page: https://agenticcontrolplane.com/spec/delegation-chain.
+
+An LLM control plane that emits ADCS-shaped audit entries produces logs that compose across vendors, survive SIEM ingestion without custom pipelines, and answer regulatory questions about where authority came from and how scopes narrowed at each hop.
+
+## Regulatory context: EU AI Act Article 14
+
+From August 2, 2026, EU AI Act Article 14 requires demonstrable human oversight of high-risk AI systems — employment, credit decisioning, critical infrastructure, law enforcement, education, essential public and private services. A chat-transcript approval flow (where the LLM asks a human before acting) does not qualify. The model cannot be the overseer of itself, and a conversational transcript is not a queryable audit artifact.
+
+An LLM control plane produces the oversight evidence Article 14(4) demands:
+- Article 14(4)(a) — Understand capacities and monitor operation: the agent profile registry, the workspace policy, and the activity log are the catalog and per-call evidence.
+- Article 14(4)(c) — Correctly interpret output: deterministic decision reasons and full-chain audit entries remove post-hoc guessing.
+- Article 14(4)(d) — Decide not to use / override / reverse: deny rules on any axis (tool, agent type, user) with audit-mode-before-enforce rollout.
+- Article 14(4)(e) — Intervene / stop-button: workspace enforce-mode toggle, per-agent kill switch, per-user kill switch, delegation freeze via scope clipping.
+
+Article 14(4)(b) — automation bias awareness — is an organizational and UX concern that the control plane supports but does not solve alone.
+
+Full mapping: https://agenticcontrolplane.com/blog/eu-ai-act-article-14-ai-agent-delegation-chains.
+
 ## Where it sits in the stack
 
 User → LLM Runtime (ChatGPT, Claude, Cursor) → LLM Control Plane → Your Backend
@@ -79,3 +110,4 @@ Start with identity — add JWT verification to intercept every LLM-initiated re
 
 Author: David Crowe (https://reducibl.com)
 Published: February 2026
+Updated: April 2026
